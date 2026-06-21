@@ -1,0 +1,35 @@
+# Secrets – NEVER commit these
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# Database (local dev only)
+*.db
+*.sqlite3
+
+# Logs
+logs/*.log
+data/job_logs/*.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Resume & personal files – add your own, never commit these
+data/*.docx
+data/*.pdf
+data/jobs_export.json
+data/generated_resumes/
+# initial_jobs.json is intentionally tracked (seeds DB on fresh deploy)

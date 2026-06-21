@@ -1,0 +1,36 @@
+# Core
+python-dotenv==1.0.1
+requests==2.31.0
+
+# Anthropic (Claude) – resume tailoring & scoring
+anthropic>=0.40.0
+
+# OpenAI (kept as fallback)
+openai==1.30.1
+
+# Web scraping
+apify-client==1.7.1
+
+# Browser automation (form filling)
+playwright==1.44.0
+
+# Web UI (approval dashboard)
+flask==3.0.3
+flask-login==0.6.3
+
+# Database
+peewee==3.17.5
+
+# Scheduling
+apscheduler==3.10.4
+
+# Slack
+slack-sdk==3.29.0
+
+# PDF generation (for tailored resumes)
+reportlab==4.2.0
+python-docx==1.1.2
+
+# Utilities
+pytz==2024.1
+python-dateutil==2.9.0

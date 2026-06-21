@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}{{ job.title }} – Job Hunt Agent{% endblock %}
+
+{% block extra_style %}
+<style>
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } }
+  textarea { width: 100%; border: 1px solid #ddd; border-radius: 6px; padding: 10px; font-size: 0.85rem;
+             font-family: inherit; resize: vertical; line-height: 1.5; }
+  textarea:focus { outline: none; border-color: #0070f3; }
+  .essay-block { border: 1px solid #eee; border-radius: 6px; padding: 14px; margin-top: 12px; background: #fafafa; }
+  .essay-block label { font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 6px; }
+  .section-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+                   color: #888; margin-bottom: 10px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="flex items-center gap-3 mb-4">
+  <a href="/" class="text-muted" style="font-size:0.85rem;">← Back to Dashboard</a>
+</div>
+
+<div class="flex justify-between items-center mb-4" style="flex-wrap:wrap;gap:12px;">
+  <div>
+    <h1>{{ job.title }}</h1>
+    <p class="text-muted">{{ job.company }} · {{ job.location }}</p>
+    <div class="flex gap-2 mt-2" style="flex-wrap:wrap;">
+      {% if job.salary_range %}<span class="badge badge-green">{{ job.salary_range }}</span>{% endif %}
+      {% if job.work_type %}<span class="badge badge-blue">{{ job.work_type }}</span>{% endif %}
+      {% if job.funding_stage %}<span class="badge badge-orange">{{ job.funding_stage }}</span>{% endif %}
+      {% if job.match_score %}<span class="badge badge-gray">Match: {{ job.match_score }}%</span>{% endif %}
+    </div>
+  </div>
+  {% if job.apply_url %}
+    <a href="{{ job.apply_url }}" target="_blank" class="btn btn-outline">View Posting ↗</a>
+  {% endif %}
+</div>
+
+<form method="POST" action="/job/{{ job.id }}/approve">
+  <div class="two-col">
+
+    <!-- LEFT: Job description -->
+    <div>
+      <div class="section-title">Job Description</div>
+      <div class="card card-body" style="max-height:420px;overflow-y:auto;font-size:0.85rem;line-height:1.6;white-space:pre-wrap;">{{ job.description or "No description available." }}</div>
+
+      <!-- Essay questions -->
+      <div class="section-title mt-4">Essay / Custom Questions</div>
+      <div id="essays">
+        {% if draft and draft.essay_answers %}
+          {% set answers = draft.essay_answers | tojson | safe %}
+        {% endif %}
+        <div class="essay-block">
+          <label>Question</label>
+          <input type="text" name="question[]" placeholder="Paste a custom question from the application form…"
+                 style="width:100%;border:1px solid #ddd;border-radius:6px;padding:8px;font-size:0.85rem;font-family:inherit;">
+          <label style="margin-top:10px;">Answer</label>
+          <textarea name="answer[]" rows="3" placeholder="Your answer will appear here…"></textarea>
+          <button type="button" class="btn btn-outline" style="margin-top:6px;font-size:0.8rem;"
+                  onclick="generateEssay(this)">✨ Auto-generate</button>
+        </div>
+      </div>
+      <button type="button" class="btn btn-outline" style="margin-top:8px;font-size:0.8rem;" onclick="addEssay()">+ Add another question</button>
+
+      <!-- Notes -->
+      <div class="section-title mt-4">Your Notes</div>
+      <textarea name="notes" rows="3" placeholder="Optional notes for yourself…">{{ draft.notes if draft else "" }}</textarea>
+    </div>
+
+    <!-- RIGHT: Tailored resume -->
+    <div>
+      <div class="section-title">Tailored Resume</div>
+      {% if resume %}
+        <textarea name="resume_text" rows="22">{{ resume.resume_text }}</textarea>
+        <div class="flex gap-2 mt-2" style="align-items:center;">
+          <p class="text-muted" style="font-size:0.78rem;">Edit directly above before approving.</p>
+          <a href="/job/{{ job.id }}/resume.pdf" class="btn btn-outline" style="font-size:0.8rem;">⬇ Download PDF</a>
+        </div>
+      {% else %}
+        <div class="card card-body" style="color:#888;font-size:0.85rem;">
+          Resume tailoring not yet complete — approve anyway and it will be sent without tailoring.
+        </div>
+        <textarea name="resume_text" rows="22" placeholder="Paste a resume draft here if needed…"></textarea>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <!-- Action buttons -->
+  <div class="flex gap-3 mt-4" style="flex-wrap:wrap;">
+    <button type="submit" class="btn btn-success">✅ Approve & Queue for Submission</button>
+    <a href="/" class="btn btn-outline">Cancel</a>
+    <form method="POST" action="/job/{{ job.id }}/skip" style="display:inline;">
+      <button type="submit" class="btn btn-danger">🗑 Skip This Job</button>
+    </form>
+  </div>
+</form>
+
+<script>
+function addEssay() {
+  const block = document.createElement("div");
+  block.className = "essay-block";
+  block.innerHTML = `
+    <label>Question</label>
+    <input type="text" name="question[]" placeholder="Paste a custom question…"
+           style="width:100%;border:1px solid #ddd;border-radius:6px;padding:8px;font-size:0.85rem;font-family:inherit;">
+    <label style="margin-top:10px;">Answer</label>
+    <textarea name="answer[]" rows="3" placeholder="Your answer…"></textarea>
+    <button type="button" class="btn btn-outline" style="margin-top:6px;font-size:0.8rem;"
+            onclick="generateEssay(this)">✨ Auto-generate</button>
+  `;
+  document.getElementById("essays").appendChild(block);
+}
+
+function generateEssay(btn) {
+  const block = btn.closest(".essay-block");
+  const question = block.querySelector("input[name='question[]']").value.trim();
+  const textarea = block.querySelector("textarea[name='answer[]']");
+  if (!question) { alert("Enter a question first."); return; }
+  btn.disabled = true;
+  btn.textContent = "Generating…";
+  fetch("/api/generate-essay", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ question, job_id: {{ job.id }} })
+  })
+  .then(r => r.json())
+  .then(data => {
+    textarea.value = data.answer || data.error || "Error generating answer.";
+    btn.disabled = false;
+    btn.textContent = "✨ Auto-generate";
+  })
+  .catch(() => {
+    textarea.value = "Error contacting server.";
+    btn.disabled = false;
+    btn.textContent = "✨ Auto-generate";
+  });
+}
+</script>
+{% endblock %}

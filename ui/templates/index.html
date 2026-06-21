@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – Job Hunt Agent{% endblock %}
+
+{% block content %}
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+  <div>
+    <h1 style="margin:0;">Job Hunt Dashboard</h1>
+    <p class="text-muted" style="margin:4px 0 0;">{{ applicant.name }} · {{ applicant.email }}</p>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <button id="clear-btn" onclick="clearExpired()" class="btn btn-outline" style="height:40px;padding:0 16px;font-size:0.9rem;color:#b91c1c;border-color:#b91c1c;">
+      🗑 Clear Expired
+    </button>
+    <button id="tailor-btn" onclick="tailorMissing()" class="btn btn-outline" style="height:40px;padding:0 16px;font-size:0.9rem;">
+      ✏️ Tailor Missing Resumes
+    </button>
+    <button id="run-now-btn" onclick="runScraper()" class="btn btn-primary" style="height:40px;padding:0 20px;font-size:0.9rem;">
+      ▶ Run Scraper Now
+    </button>
+  </div>
+</div>
+
+<div id="run-banner" style="display:none;background:#d1fae5;border:1px solid #6ee7b7;border-radius:8px;padding:12px 16px;margin-top:16px;color:#065f46;font-size:0.9rem;">
+  ✅ Scrape started! Refresh the page in ~60 seconds to see new jobs.
+</div>
+
+<script>
+function runScraper() {
+  const btn = document.getElementById('run-now-btn');
+  const banner = document.getElementById('run-banner');
+  btn.disabled = true;
+  btn.textContent = '⏳ Running…';
+  fetch('/api/run-scraper', {method: 'POST'})
+    .then(r => r.json())
+    .then(d => {
+      banner.style.display = 'block';
+      banner.textContent = '✅ Scrape + resume tailoring started! Refresh in ~2 minutes to see new jobs with tailored resumes.';
+      btn.textContent = '✓ Started';
+      setTimeout(() => location.reload(), 120000);
+    })
+    .catch(e => {
+      btn.disabled = false;
+      btn.textContent = '▶ Run Scraper Now';
+      alert('Error starting scraper: ' + e);
+    });
+}
+
+function clearExpired() {
+  const btn = document.getElementById('clear-btn');
+  const banner = document.getElementById('run-banner');
+  if (!confirm('Remove all jobs older than 30 days from the queue? This cannot be undone.')) return;
+  btn.disabled = true;
+  btn.textContent = '⏳ Clearing…';
+  fetch('/api/clear-expired', {method: 'POST'})
+    .then(r => r.json())
+    .then(d => {
+      banner.style.display = 'block';
+      banner.style.background = '#fee2e2';
+      banner.style.borderColor = '#fca5a5';
+      banner.style.color = '#991b1b';
+      banner.textContent = '🗑 ' + d.message + ' Refreshing…';
+      setTimeout(() => location.reload(), 2000);
+    })
+    .catch(e => {
+      btn.disabled = false;
+      btn.textContent = '🗑 Clear Expired';
+      alert('Error: ' + e);
+    });
+}
+
+function tailorMissing() {
+  const btn = document.getElementById('tailor-btn');
+  const banner = document.getElementById('run-banner');
+  btn.disabled = true;
+  btn.textContent = '⏳ Tailoring…';
+  fetch('/api/tailor-missing', {method: 'POST'})
+    .then(r => r.json())
+    .then(d => {
+      banner.style.display = 'block';
+      banner.textContent = '✅ Generating tailored resumes for existing jobs — refresh in ~2 minutes.';
+      btn.textContent = '✓ Started';
+      setTimeout(() => location.reload(), 120000);
+    })
+    .catch(e => {
+      btn.disabled = false;
+      btn.textContent = '✏️ Tailor Missing Resumes';
+      alert('Error: ' + e);
+    });
+}
+</script>
+
+<div class="stats mt-4">
+  <div class="stat-card">
+    <div class="num">{{ total_found }}</div>
+    <div class="label">Jobs Found</div>
+  </div>
+  <div class="stat-card">
+    <div class="num">{{ pending | list | length }}</div>
+    <div class="label">Pending Review</div>
+  </div>
+  <div class="stat-card">
+    <div class="num">{{ approved_count }}</div>
+    <div class="label">Approved</div>
+  </div>
+  <div class="stat-card">
+    <div class="num">{{ submitted_count }}</div>
+    <div class="label">Submitted</div>
+  </div>
+</div>
+
+<h2 class="mb-4">Pending Review</h2>
+
+{% set pending_list = pending | list %}
+{% if pending_list %}
+  {% for job in pending_list %}
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h2><a href="/job/{{ job.id }}">{{ job.title }}</a></h2>
+        <div class="text-muted mt-2">{{ job.company }} · {{ job.location }}</div>
+        <div class="flex gap-2 mt-2" style="flex-wrap:wrap;">
+          {% if job.salary_range %}
+            <span class="badge badge-green">{{ job.salary_range }}</span>
+          {% endif %}
+          {% if job.work_type %}
+            <span class="badge badge-blue">{{ job.work_type }}</span>
+          {% endif %}
+          {% if job.funding_stage %}
+            <span class="badge badge-orange">{{ job.funding_stage }}</span>
+          {% endif %}
+          {% if job.match_score %}
+            <span class="badge badge-gray">Match: {{ job.match_score }}%</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="flex gap-2 items-center" style="flex-shrink:0;margin-left:16px;">
+        <a href="/job/{{ job.id }}" class="btn btn-primary">Review →</a>
+        <a href="/job/{{ job.id }}/resume.pdf" class="btn btn-outline" title="Download tailored resume as PDF">⬇ PDF</a>
+        <form method="POST" action="/job/{{ job.id }}/skip" style="display:inline;">
+          <button type="submit" class="btn btn-outline">Skip</button>
+        </form>
+      </div>
+    </div>
+    {% if job.description %}
+    <div class="card-body">
+      <p class="text-muted" style="font-size:0.85rem;line-height:1.5;">
+        {{ job.description[:300] }}{% if job.description|length > 300 %}…{% endif %}
+      </p>
+      {% if job.apply_url %}
+        <a href="{{ job.apply_url }}" target="_blank" class="text-muted" style="font-size:0.8rem;">View original posting ↗</a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+{% else %}
+  <div class="card card-body" style="text-align:center;padding:48px 20px;color:#666;">
+    <div style="font-size:2.5rem;margin-bottom:12px;">🔍</div>
+    <h3>No pending jobs right now.</h3>
+    <p class="text-muted mt-2">The scraper runs every 2 hours automatically — or click <strong>▶ Run Scraper Now</strong> above to fetch jobs immediately.</p>
+  </div>
+{% endif %}
+{% endblock %}

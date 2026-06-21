@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Submitted Applications – Job Hunt Agent{% endblock %}
+
+{% block content %}
+<h1>Submitted Applications</h1>
+<p class="text-muted mt-2 mb-4">All applications that have been auto-submitted via Playwright.</p>
+
+{% set sub_list = submissions | list %}
+{% if sub_list %}
+  {% for sub in sub_list %}
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h2>{{ sub.job.title }}</h2>
+        <p class="text-muted">{{ sub.job.company }} · {{ sub.job.location }}</p>
+        <p class="text-muted mt-2" style="font-size:0.8rem;">
+          Submitted: {{ sub.submitted_at.strftime("%b %d, %Y %I:%M %p") if sub.submitted_at else "—" }}
+        </p>
+      </div>
+      <div>
+        {% if sub.success %}
+          <span class="badge badge-green">✓ Submitted</span>
+        {% else %}
+          <span class="badge" style="background:#f8d7da;color:#721c24;">✗ Failed</span>
+        {% endif %}
+        {% if sub.job.apply_url %}
+          <a href="{{ sub.job.apply_url }}" target="_blank" class="btn btn-outline" style="margin-left:8px;">View Posting ↗</a>
+        {% endif %}
+      </div>
+    </div>
+    {% if not sub.success and sub.error_message %}
+    <div class="card-body">
+      <p class="text-muted" style="font-size:0.82rem;">Error: {{ sub.error_message }}</p>
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+{% else %}
+  <div class="card card-body" style="text-align:center;padding:48px 20px;color:#666;">
+    <div style="font-size:2.5rem;margin-bottom:12px;">📭</div>
+    <h3>No submissions yet.</h3>
+    <p class="text-muted mt-2">Approve jobs from the <a href="/">dashboard</a> to queue them for auto-submission.</p>
+  </div>
+{% endif %}
+{% endblock %}
