@@ -144,7 +144,7 @@ function tailorMissing() {
     {% if job.description %}
     <div class="card-body">
       <p class="text-muted" style="font-size:0.85rem;line-height:1.5;">
-        {{ job.description[:300] }}{% if job.description|length > 300 %}…{% endif %}
+        {{ job.description | striptags | truncate(300) }}
       </p>
       {% if job.apply_url %}
         <a href="{{ job.apply_url }}" target="_blank" class="text-muted" style="font-size:0.8rem;">View original posting ↗</a>

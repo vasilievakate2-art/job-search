@@ -42,7 +42,7 @@
     <!-- LEFT: Job description -->
     <div>
       <div class="section-title">Job Description</div>
-      <div class="card card-body" style="max-height:420px;overflow-y:auto;font-size:0.85rem;line-height:1.6;white-space:pre-wrap;">{{ job.description or "No description available." }}</div>
+      <div class="card card-body" style="max-height:420px;overflow-y:auto;font-size:0.85rem;line-height:1.6;">{{ (job.description or "No description available.") | safe }}</div>
 
       <!-- Essay questions -->
       <div class="section-title mt-4">Essay / Custom Questions</div>
