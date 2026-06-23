@@ -11,7 +11,7 @@ At 3 jobs/day this stretches $5 credit to roughly 6-8 weeks.
 import logging
 import json
 import anthropic
-from config.settings import ANTHROPIC_API_KEY, MASTER_RESUME_PATH, GENERATED_DIR, APPLICANT
+from config.settings import ANTHROPIC_API_KEY, MASTER_RESUME_PATH, GENERATED_DIR, APPLICANT, RESUME_SUMMARY
 
 logger = logging.getLogger(__name__)
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
@@ -19,14 +19,21 @@ client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
 # ── Load master resume once at import time ─────────────────────────────────────
 def _load_master_resume() -> str:
-    """Load the master resume as plain text."""
+    """Load the master resume as plain text. Falls back to RESUME_SUMMARY env var."""
     try:
         from docx import Document
         doc = Document(MASTER_RESUME_PATH)
-        return "\n".join([para.text for para in doc.paragraphs if para.text.strip()])
+        text = "\n".join([para.text for para in doc.paragraphs if para.text.strip()])
+        if text:
+            return text
     except Exception as e:
-        logger.error(f"Failed to load master resume: {e}")
-        return ""
+        logger.warning(f"resume.docx not found, falling back to RESUME_SUMMARY env var: {e}")
+    # Fallback: use the plain-text summary from the environment variable
+    if RESUME_SUMMARY:
+        logger.info("Using RESUME_SUMMARY env var for scoring and tailoring.")
+        return RESUME_SUMMARY
+    logger.error("No resume available — set RESUME_SUMMARY in Railway variables.")
+    return ""
 
 
 MASTER_RESUME_TEXT = _load_master_resume()

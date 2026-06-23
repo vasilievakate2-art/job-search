@@ -99,6 +99,7 @@ APPLICANT = {
 # ── File Paths ────────────────────────────────────────────────────────────────
 BASE_DIR            = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MASTER_RESUME_PATH  = os.path.join(BASE_DIR, "data", os.getenv("RESUME_FILENAME", "resume.docx"))
+RESUME_SUMMARY      = os.getenv("RESUME_SUMMARY", "")   # plain-text resume fallback for Railway
 GENERATED_DIR       = os.path.join(BASE_DIR, "data", "generated_resumes")
 LOGS_DIR            = os.path.join(BASE_DIR, "logs")
 # On Railway, mount a Volume at /data so the DB survives redeploys.
