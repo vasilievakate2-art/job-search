@@ -56,8 +56,8 @@ def run_scrapers():
 
                 # Score the match with Haiku (fast + cheap)
                 score, reason, gaps = score_match(job_data)
-                if score < 30:
-                    logger.info(f"Low match ({score}) – skipping: {job_data['title']} @ {job_data['company']}")
+                if score < 20:
+                    logger.info(f"Low match ({score}/100) – skipping: {job_data['title']} @ {job_data['company']}")
                     continue
 
                 # Save to DB
