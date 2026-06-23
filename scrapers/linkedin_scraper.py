@@ -35,17 +35,19 @@ class LinkedInScraper(BaseScraper):
         all_jobs = []
         search_pairs = [
             ("content marketing manager",  "San Francisco Bay Area"),
+            ("content marketing manager",  "United States"),
             ("head of marketing",          "San Francisco Bay Area"),
+            ("head of marketing",          "United States"),
             ("brand strategist",           "San Francisco Bay Area"),
             ("growth marketer",            "San Francisco Bay Area"),
             ("social media manager",       "San Francisco Bay Area"),
+            ("content lead",               "San Francisco Bay Area"),
             ("content lead",               "United States"),
             ("marketing manager",          "San Francisco Bay Area"),
-            ("demand generation manager",  "United States"),
-            ("field marketing manager",    "United States"),
-            ("content production manager", "United States"),
-            ("community growth manager",   "United States"),
-            ("marketing content manager",  "United States"),
+            ("demand generation manager",  "San Francisco Bay Area"),
+            ("director of content",        "United States"),
+            ("director of marketing",      "San Francisco Bay Area"),
+            ("VP of marketing",            "San Francisco Bay Area"),
         ]
 
         for title, location in search_pairs:

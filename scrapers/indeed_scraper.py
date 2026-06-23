@@ -31,17 +31,15 @@ class IndeedScraper(BaseScraper):
         search_queries = []
         priority_locations = [
             "San Francisco, CA",
-            "San Jose, CA",
-            "Bay Area, CA",
+            "San Francisco Bay Area, CA",
             "Remote",
-            "Los Angeles, CA",
-            "New York, NY",
+            "United States",
         ]
 
-        # Limit to 5 titles × 3 locations = 15 queries to stay within Apify free plan
-        priority_titles = TARGET_TITLES[:5]
+        # 8 titles × 4 locations = 32 queries — SF/Bay Area + Remote USA
+        priority_titles = TARGET_TITLES[:8]
         for title in priority_titles:
-            for location in priority_locations[:3]:
+            for location in priority_locations:
                 search_queries.append({"position": title, "location": location})
 
         logger.info(f"[indeed] Running {len(search_queries)} search queries via Apify...")

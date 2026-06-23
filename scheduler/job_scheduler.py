@@ -23,6 +23,7 @@ from scrapers.remotive_scraper import RemotiveScraper
 from scrapers.remoteok_scraper import RemoteOKScraper
 from scrapers.indeed_scraper import IndeedScraper
 from scrapers.wellfound_scraper import WellfoundScraper
+from scrapers.linkedin_scraper import LinkedInScraper
 from llm.resume_tailor import tailor_resume, score_match
 
 logger = logging.getLogger(__name__)
@@ -42,8 +43,7 @@ def run_scrapers():
     # Remotive + RemoteOK: always free, no quota
     # Indeed/Wellfound: Apify quota (resets monthly)
     # LinkedIn: RapidAPI (resets monthly)
-    # LinkedIn excluded — requires account login + paid RapidAPI subscription
-    scrapers = [RemotiveScraper(), RemoteOKScraper(), IndeedScraper(), WellfoundScraper()]
+    scrapers = [RemotiveScraper(), RemoteOKScraper(), IndeedScraper(), WellfoundScraper(), LinkedInScraper()]
     new_count = 0
 
     for scraper in scrapers:
