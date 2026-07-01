@@ -12,10 +12,13 @@ logger = logging.getLogger(__name__)
 
 REMOTIVE_URL = "https://remotive.com/api/remote-jobs"
 
-MARKETING_CATEGORIES = [
-    "marketing",
-    "copywriting",
-    "customer-success",
+# Remotive's category request param is broken — API ignores it and returns ~30 recent jobs regardless.
+# We fetch once and filter by the category field in each job's response instead.
+MARKETING_RESPONSE_CATEGORIES = {"Marketing", "Writing", "Communications", "Content Creation"}
+
+MARKETING_TITLE_KEYWORDS = [
+    "marketing", "content", "brand", "social media", "growth", "copywriter",
+    "communications", "community", "seo", "demand gen", "campaign",
 ]
 
 
@@ -25,18 +28,24 @@ class RemotiveScraper(BaseScraper):
     def fetch_jobs(self) -> list[dict]:
         all_jobs = []
 
-        for category in MARKETING_CATEGORIES:
-            try:
-                r = requests.get(REMOTIVE_URL, params={"category": category, "limit": 100}, timeout=15)
-                r.raise_for_status()
-                jobs = r.json().get("jobs", [])
-                logger.info(f"[remotive] category={category} → {len(jobs)} results")
-                for item in jobs:
+        try:
+            r = requests.get(REMOTIVE_URL, params={"limit": 100}, timeout=15)
+            r.raise_for_status()
+            raw_jobs = r.json().get("jobs", [])
+            logger.info(f"[remotive] fetched {len(raw_jobs)} total jobs")
+
+            for item in raw_jobs:
+                cat = item.get("category", "")
+                title = item.get("title", "").lower()
+                # Keep if category matches OR title has marketing keywords
+                if cat in MARKETING_RESPONSE_CATEGORIES or any(k in title for k in MARKETING_TITLE_KEYWORDS):
                     parsed = self._parse_item(item)
                     if parsed:
                         all_jobs.append(parsed)
-            except Exception as e:
-                logger.error(f"[remotive] Error on category {category}: {e}")
+
+            logger.info(f"[remotive] {len(all_jobs)} marketing-relevant jobs after filtering")
+        except Exception as e:
+            logger.error(f"[remotive] Error: {e}")
 
         # Deduplicate
         seen, unique = set(), []

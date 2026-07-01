@@ -21,7 +21,7 @@ from config.settings import (
 from database.models import db, JobListing, TailoredResume, ApplicationDraft, Submission, init_db
 from scrapers.remotive_scraper import RemotiveScraper
 from scrapers.remoteok_scraper import RemoteOKScraper
-from scrapers.themuse_scraper import TheMuseScraper
+from scrapers.jobicy_scraper import JobicyScraper
 from scrapers.indeed_scraper import IndeedScraper
 from scrapers.wellfound_scraper import WellfoundScraper
 from scrapers.linkedin_scraper import LinkedInScraper
@@ -47,7 +47,7 @@ def run_scrapers():
     # Free sources: Remotive, RemoteOK, TheMuse (no quota, always on)
     # Apify sources: Indeed, Wellfound (quota-limited)
     # RapidAPI: LinkedIn (requires active subscription)
-    scrapers = [RemotiveScraper(), RemoteOKScraper(), TheMuseScraper(), IndeedScraper(), WellfoundScraper(), LinkedInScraper()]
+    scrapers = [RemotiveScraper(), RemoteOKScraper(), JobicyScraper(), IndeedScraper(), WellfoundScraper(), LinkedInScraper()]
     new_count = 0
 
     for scraper in scrapers:
