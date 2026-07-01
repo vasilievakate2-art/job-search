@@ -27,20 +27,14 @@ class WellfoundScraper(BaseScraper):
         """Fetch startup jobs from Wellfound via Apify."""
         all_jobs = []
 
-        # Wellfound searches by role type – broad marketing categories × locations
+        # 3 broad queries × 1 location = 3 Apify runs.
+        # "San Francisco Bay Area" covers the whole Bay and Wellfound returns startup roles with equity info.
         search_terms = [
-            "marketing manager",
+            "marketing",
             "content marketing",
-            "brand marketing",
-            "growth marketing",
-            "social media marketing",
-            "head of marketing",
-            "content lead",
-            "demand generation",
-            "field marketing",
-            "community manager",
+            "brand growth",
         ]
-        search_locations = ["San Francisco Bay Area", "United States"]
+        search_locations = ["San Francisco Bay Area"]
 
         for term in search_terms:
             for location_filter in search_locations:
@@ -49,8 +43,8 @@ class WellfoundScraper(BaseScraper):
                         "searchQuery":      term,
                         "locationFilter":   location_filter,
                         "remote":           True,
-                        "maxResults":       50,
-                        "salaryMin":        SALARY_MIN,   # $110k floor – local filter refines further
+                        "maxResults":       100,
+                        "salaryMin":        SALARY_MIN,
                     }
                     run   = self.client.actor(WELLFOUND_ACTOR_ID).call(run_input=run_input)
                     items = list(self.client.dataset(run["defaultDatasetId"]).iterate_items())

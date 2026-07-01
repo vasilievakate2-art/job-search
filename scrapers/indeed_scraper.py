@@ -24,23 +24,20 @@ class IndeedScraper(BaseScraper):
         self.client = ApifyClient(APIFY_API_TOKEN)
 
     def fetch_jobs(self) -> list[dict]:
-        """Fetch jobs from Indeed via Apify actor."""
+        """Fetch jobs from Indeed via Apify actor.
+
+        Budget: 4 queries per run (Bay Area only). At ~$0.06/query this costs
+        ~$0.24/run × 12 runs/day = ~$2.88/day. Keep queries tight to preserve Apify quota.
+        """
         all_jobs = []
 
-        # Build search queries: all titles × key locations for maximum coverage
-        search_queries = []
-        priority_locations = [
-            "San Francisco, CA",
-            "San Francisco Bay Area, CA",
-            "Remote",
-            "United States",
+        # 4 targeted queries: broad Bay Area search with high maxItems to cover all titles at once.
+        search_queries = [
+            {"position": "marketing manager", "location": "San Francisco Bay Area, CA"},
+            {"position": "content marketing",  "location": "San Francisco Bay Area, CA"},
+            {"position": "head of marketing",  "location": "San Francisco, CA"},
+            {"position": "marketing director", "location": "San Francisco Bay Area, CA"},
         ]
-
-        # 8 titles × 4 locations = 32 queries — SF/Bay Area + Remote USA
-        priority_titles = TARGET_TITLES[:8]
-        for title in priority_titles:
-            for location in priority_locations:
-                search_queries.append({"position": title, "location": location})
 
         logger.info(f"[indeed] Running {len(search_queries)} search queries via Apify...")
 
@@ -49,7 +46,7 @@ class IndeedScraper(BaseScraper):
                 run_input = {
                     "position": query["position"],
                     "location": query["location"],
-                    "maxItems": 50,
+                    "maxItems": 100,
                     "parseCompanyDetails": False,
                     "saveOnlyUniqueItems": True,
                     "followApplyRedirects": False,
